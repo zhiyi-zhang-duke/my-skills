@@ -1,0 +1,63 @@
+{
+  "skill_name": "uml-diagram",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "yt-pipelines-full-repo",
+      "prompt": "Generate an interactive UML diagram of the architecture of the repo at /Users/jackzhang/khan/youtube-pipelines. I want a high-level view of the whole system first, with the ability to drill down into the details of each pipeline. Make it a single HTML file I can open in my browser.",
+      "expected_output": "A self-contained interactive HTML architecture diagram with a small high-level view (actors, pipelines, external systems like YouTube API), drill-down into the captions/videos pipelines, labeled edges, and detail sidebars grounded in real file paths.",
+      "files": [
+        "/Users/jackzhang/khan/youtube-pipelines"
+      ],
+      "assertions": [
+        "Deliverable is a single HTML file that renders in a headless browser with no error banner and no uncaught JS console errors",
+        "HTML is fully self-contained: no <script src> or <link href> pointing at external http(s) hosts (works offline)",
+        "Top-level view is a readable abstraction: between 3 and 11 components, not one box per file",
+        "Drill-down works: at least one top-level component expands into a deeper level of detail",
+        "Connections between components are labeled with descriptive interaction text (not bare arrows)",
+        "Component details are grounded in the real repo: clicking/inspecting components surfaces file paths that actually exist under /Users/jackzhang/khan/youtube-pipelines",
+        "Architecture matches reality: both the captions pipeline and the videos pipeline appear as distinct components, and YouTube (API) appears as an external system",
+        "At least one sequence-diagram-style flow of a key scenario is included",
+        "Sync vs async/data interactions are visually distinguished (different arrow/line styles with a legend or equivalent)"
+      ]
+    },
+    {
+      "id": 1,
+      "eval_name": "captions-pipeline-scoped",
+      "prompt": "I need an architecture diagram of just the captions pipeline inside /Users/jackzhang/khan/youtube-pipelines — what triggers it, what it reads and writes, and everything external it talks to. Something interactive I can click around in to see details would be ideal.",
+      "expected_output": "An interactive HTML diagram scoped to the captions pipeline as the system under study, with its triggers, data stores, and external systems (YouTube API etc.) as context, drill-down into the pipeline's internal steps, and at least one sequence-diagram flow.",
+      "files": [
+        "/Users/jackzhang/khan/youtube-pipelines/captions"
+      ],
+      "assertions": [
+        "Deliverable is a single HTML file that renders in a headless browser with no error banner and no uncaught JS console errors",
+        "HTML is fully self-contained: no <script src> or <link href> pointing at external http(s) hosts (works offline)",
+        "Scope is honored: the captions pipeline is the system under study (not a whole-repo diagram with captions as one box among equals)",
+        "The diagram answers the user's three questions: what triggers the pipeline, what data it reads/writes, and which external systems it talks to",
+        "Drill-down works: the captions pipeline expands into its internal steps/components",
+        "Connections between components are labeled with descriptive interaction text (not bare arrows)",
+        "Component details are grounded in the real repo: inspecting components surfaces file paths that actually exist under /Users/jackzhang/khan/youtube-pipelines",
+        "At least one sequence-diagram-style flow of a caption-sync run is included"
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "kids-mcp-prototype",
+      "prompt": "can you make me a uml diagram showing how my MCP server prototype at /Users/jackzhang/khan/khan_kids_video_mcp_prototype works? high level architecture, but interactive so i can click into components for details",
+      "expected_output": "An interactive HTML diagram of the MCP prototype: ChatGPT/client, ngrok, the FastAPI/MCP server, tools/widget rendering, video data — with clickable component details and drill-down.",
+      "files": [
+        "/Users/jackzhang/khan/khan_kids_video_mcp_prototype"
+      ],
+      "assertions": [
+        "Deliverable is a single HTML file that renders in a headless browser with no error banner and no uncaught JS console errors",
+        "HTML is fully self-contained: no <script src> or <link href> pointing at external http(s) hosts (works offline)",
+        "Top-level view is a readable abstraction: between 3 and 11 components, not one box per file",
+        "Architecture matches reality: the MCP server, the client side (ChatGPT and/or test client), and the tunnel/transport (ngrok / StreamableHttp) are represented",
+        "Click-to-inspect works: components reveal detail (description, tech, or file paths) on interaction",
+        "Component details are grounded in the real repo: file paths surfaced actually exist under /Users/jackzhang/khan/khan_kids_video_mcp_prototype",
+        "Connections between components are labeled with descriptive interaction text (not bare arrows)",
+        "Drill-down works: at least one component expands into a deeper level of detail"
+      ]
+    }
+  ]
+}

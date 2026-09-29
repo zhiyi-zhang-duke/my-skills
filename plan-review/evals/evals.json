@@ -1,0 +1,48 @@
+{
+  "skill_name": "plan-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Can you review my migration plan before I start implementing? It's in evals/files/vague-migration-plan.md",
+      "expected_output": "A review.md with multiple BLOCKER findings (missing rollback strategy, no reasoning for UUID migration approach, unvalidated downtime assumption, vague steps like 'update the code') and CONCERN findings (foreign key cascade handling, no testing plan). Verdict: Needs significant work.",
+      "files": ["evals/files/vague-migration-plan.md"],
+      "assertions": [
+        "Review identifies at least one BLOCKER finding",
+        "Review calls out the missing rollback / revert strategy",
+        "Review flags vague steps like 'update the code' or 'figure that out as we go'",
+        "Review flags the unvalidated assumption about downtime being acceptable",
+        "Review produces a 'Needs significant work' verdict (or equivalent)",
+        "Review is written to a review.md file (not just printed to the console)",
+        "Review includes a 'What's Working Well' section with at least one genuine point"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Please review this API versioning plan and let me know if there are any gaps. Plan is at evals/files/api-redesign-plan.md",
+      "expected_output": "A review.md that acknowledges the solid reasoning for URL-based versioning, flags the open TBD on the API spec (blocking Phase 2), flags the unresolved 'versionless path' client question as a BLOCKER or CONCERN, notes that webhook versioning was explicitly out of scope (acceptable), and gives a 'Needs minor work' verdict.",
+      "files": ["evals/files/api-redesign-plan.md"],
+      "assertions": [
+        "Review acknowledges the URL-based versioning rationale as a positive",
+        "Review flags the TBD API spec dependency in Phase 2 as a blocking concern",
+        "Review identifies the open question about clients using versionless paths",
+        "Review does NOT flag the webhook versioning exclusion as a problem (it was explicitly called out)",
+        "Verdict is 'Needs minor work' or 'Needs significant work' (not 'Ready to implement')",
+        "Review is written to a review.md file"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I wrote a plan for adding rate limiting. Can you sanity check it before I start coding? File: evals/files/solid-feature-plan.md",
+      "expected_output": "A review.md that recognizes the solid design (fail-open rationale, sliding window choice explained, Redis reuse justified, rollback via feature flag). Findings should be at most CONCERN or NITPICK level — no BLOCKERs. Verdict: Ready to implement or Needs minor work.",
+      "files": ["evals/files/solid-feature-plan.md"],
+      "assertions": [
+        "Review contains NO BLOCKER findings",
+        "Verdict is 'Ready to implement' or 'Needs minor work' (not 'Needs significant work')",
+        "Review specifically praises at least one of: fail-open rationale, sliding window reasoning, or rollback strategy",
+        "Review is written to a review.md file",
+        "Any CONCERN or NITPICK findings are minor and do not contradict sound decisions already in the plan"
+      ]
+    }
+  ]
+}
+

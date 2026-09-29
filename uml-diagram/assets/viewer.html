@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>__DIAGRAM_TITLE__</title>
+<style>
+:root{
+  --bg:#f2f4f8; --panel:#ffffff; --ink:#1a2233; --muted:#5b6575; --line:#d7dce4;
+  --accent:#3564d7; --accent-ink:#ffffff; --canvas:#fbfcfe; --chip:#eef1f6;
+  --ghost:#8a93a3; --shadow:0 1px 4px rgba(15,23,42,.14); --note:#8a6d1f; --notebg:#fdf6dd;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0d1219; --panel:#151c26; --ink:#e6ebf2; --muted:#98a3b3; --line:#2a3442;
+    --accent:#7aa5ff; --accent-ink:#0b1020; --canvas:#101722; --chip:#1d2632;
+    --ghost:#6b7686; --shadow:0 1px 4px rgba(0,0,0,.5); --note:#d8bb6a; --notebg:#2a2410; }
+}
+*{box-sizing:border-box; margin:0}
+html,body{height:100%}
+body{background:var(--bg); color:var(--ink); font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; display:flex; flex-direction:column; overflow:hidden}
+header{display:flex; align-items:center; gap:10px; padding:8px 14px; background:var(--panel); border-bottom:1px solid var(--line); flex:none; z-index:5}
+#crumbs{display:flex; align-items:center; gap:4px; min-width:0; flex:1 1 auto; overflow:hidden; white-space:nowrap}
+#crumbs .crumb{background:none; border:none; color:var(--accent); font:inherit; cursor:pointer; padding:2px 4px; border-radius:5px; overflow:hidden; text-overflow:ellipsis; max-width:220px}
+#crumbs .crumb:hover{background:var(--chip)}
+#crumbs .crumb.cur{color:var(--ink); font-weight:650; cursor:default}
+#crumbs .sep{color:var(--muted)}
+#tabs{display:flex; background:var(--chip); border-radius:8px; padding:2px; flex:none}
+#tabs button{border:none; background:none; color:var(--muted); font:inherit; font-size:13px; padding:4px 12px; border-radius:6px; cursor:pointer}
+#tabs button.on{background:var(--panel); color:var(--ink); box-shadow:var(--shadow)}
+#searchWrap{position:relative; flex:none}
+#search{width:230px; padding:5px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); font:inherit; font-size:13px}
+#search:focus{outline:2px solid var(--accent); outline-offset:-1px}
+#results{position:absolute; top:34px; right:0; width:330px; max-height:320px; overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 30px rgba(0,0,0,.25); display:none; z-index:30}
+#results.open{display:block}
+#results .r{display:block; width:100%; text-align:left; border:none; background:none; color:var(--ink); font:inherit; padding:8px 12px; cursor:pointer; border-bottom:1px solid var(--line)}
+#results .r:last-child{border-bottom:none}
+#results .r:hover,#results .r.sel{background:var(--chip)}
+#results .r .path{font-size:11.5px; color:var(--muted)}
+header .btn{border:1px solid var(--line); background:var(--panel); color:var(--ink); font:inherit; font-size:13px; padding:5px 11px; border-radius:8px; cursor:pointer; flex:none}
+header .btn:hover{background:var(--chip)}
+header .btn:disabled{opacity:.4; cursor:default; background:var(--panel)}
+main{flex:1; display:flex; min-height:0}
+#canvasWrap{flex:1; position:relative; min-width:0; background:var(--canvas)}
+#svg{width:100%; height:100%; display:block; touch-action:none; cursor:grab}
+#svg.panning{cursor:grabbing}
+#hint{position:absolute; left:12px; bottom:10px; font-size:11.5px; color:var(--muted); pointer-events:none; background:color-mix(in srgb, var(--canvas) 82%, transparent); padding:3px 8px; border-radius:6px}
+#legend{position:absolute; right:12px; bottom:12px; background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); padding:10px 14px; font-size:12px; display:none; max-width:290px}
+#legend.open{display:block}
+#legend h3{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:8px 0 4px}
+#legend h3:first-child{margin-top:0}
+#legend .row{display:flex; align-items:center; gap:8px; margin:3px 0}
+#legend svg{flex:none}
+#flowCards{position:absolute; inset:0; overflow:auto; padding:26px; display:none}
+#flowCards.open{display:block}
+#flowCards .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:14px; max-width:1000px; margin:0 auto}
+#flowCards .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; cursor:pointer; text-align:left; font:inherit; color:var(--ink); box-shadow:var(--shadow)}
+#flowCards .card:hover{border-color:var(--accent)}
+#flowCards .card h3{font-size:15px; margin-bottom:6px}
+#flowCards .card p{font-size:13px; color:var(--muted)}
+#flowCards .card .n{font-size:11.5px; color:var(--muted); margin-top:10px}
+#backFlow{position:absolute; top:10px; left:12px; display:none; z-index:4}
+#backFlow.open{display:inline-block}
+aside{width:340px; flex:none; background:var(--panel); border-left:1px solid var(--line); overflow-y:auto; padding:16px 18px}
+aside.empty{display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px; text-align:center; padding:30px}
+aside h2{font-size:16.5px; line-height:1.3; margin-bottom:2px; overflow-wrap:anywhere}
+aside .stchip{display:inline-block; font-size:11px; font-weight:650; letter-spacing:.04em; padding:2px 8px; border-radius:20px; color:#fff; margin:4px 0 2px}
+aside .path{font-size:11.5px; color:var(--muted); margin-bottom:10px; overflow-wrap:anywhere}
+aside section{margin-top:14px}
+aside section h4{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:5px}
+aside p{font-size:13px}
+aside ul{padding-left:18px; font-size:13px}
+aside li{margin:3px 0}
+aside code, aside .mono{font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--chip); padding:1px 5px; border-radius:4px; overflow-wrap:anywhere}
+aside .filelist div{margin:3px 0}
+aside .conn{display:block; width:100%; text-align:left; border:1px solid var(--line); background:none; color:var(--ink); font:inherit; font-size:12.5px; border-radius:8px; padding:6px 9px; margin:4px 0; cursor:pointer}
+aside .conn:hover{border-color:var(--accent)}
+aside .conn .dir{color:var(--muted); font-size:11px}
+aside .drill{margin-top:10px; width:100%; border:none; background:var(--accent); color:var(--accent-ink); font:inherit; font-weight:600; padding:8px; border-radius:8px; cursor:pointer}
+aside .linkbtn{background:none; border:none; color:var(--accent); font:inherit; font-size:13px; cursor:pointer; padding:0; text-align:left}
+aside .linkbtn:hover{text-decoration:underline}
+aside .meta{margin-top:20px; padding-top:10px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted)}
+#err{padding:40px; color:#c0392b; font-size:15px; display:none}
+@media (max-width:900px){ aside{position:absolute; right:0; top:0; bottom:0; box-shadow:-6px 0 20px rgba(0,0,0,.2); z-index:6} #search{width:140px} }
+</style>
+</head>
+<body>
+<header>
+  <div id="crumbs"></div>
+  <div id="tabs">
+    <button id="tabStructure" class="on">Structure</button>
+    <button id="tabFlows">Flows</button>
+  </div>
+  <div id="searchWrap">
+    <input id="search" type="text" placeholder="Search components…" autocomplete="off"/>
+    <div id="results"></div>
+  </div>
+  <button class="btn" id="fitBtn" title="Fit diagram to window (F)">Fit</button>
+  <button class="btn" id="resetLayoutBtn" title="Discard the saved box positions for this view (⇧-click: every view)">Reset layout ↺</button>
+  <button class="btn" id="legendBtn">Legend</button>
+  <button class="btn" id="exportBtn" title="Download current view as SVG">SVG ⭳</button>
+</header>
+<main>
+  <div id="canvasWrap">
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <button class="btn" id="backFlow">‹ All flows</button>
+    <div id="flowCards"></div>
+    <div id="hint">scroll to zoom · drag a box to move it (positions are saved) · drag the canvas to pan · click to inspect · double-click to drill in · Esc to go up</div>
+    <div id="legend"></div>
+  </div>
+  <aside id="sidebar" class="empty">Click a component or connection to inspect it.</aside>
+</main>
+<div id="err"></div>
+<script>
+"use strict";
+const MODEL = /*__DIAGRAM_DATA__*/null;
+
+/* ============================ constants ============================ */
+const SYS_FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+const MONO_FONT = 'ui-monospace,SFMono-Regular,Menlo,monospace';
+const NODE_W = 204, GAP_X = 130, GAP_Y = 46;
+const STEREO_COLORS = {
+  service:'#3b82f6', api:'#0ea5e9', worker:'#8b5cf6', pipeline:'#06b6d4', job:'#06b6d4',
+  database:'#d97706', store:'#d97706', cache:'#b45309', queue:'#db2777', topic:'#db2777',
+  external:'#64748b', ui:'#10b981', web:'#10b981', mobile:'#10b981', cli:'#84cc16',
+  library:'#a855f7', module:'#a855f7', component:'#3b82f6', actor:'#f43f5e', person:'#f43f5e',
+  class:'#64748b', function:'#64748b', config:'#78716c', system:'#3564d7'
+};
+const SVG_CSS = `
+  .node{cursor:grab}
+  .node .body{fill:var(--panel); stroke-width:1.4}
+  .node text{fill:var(--ink); font-family:${SYS_FONT}}
+  .node .stereo{fill:var(--muted); font-size:10.5px}
+  .node .nname{font-size:13px; font-weight:600}
+  .node .tech{fill:var(--muted); font-size:10.5px}
+  .node .kids{fill:var(--muted); font-size:10px; font-style:italic}
+  .node .kids:hover{fill:var(--accent); text-decoration:underline}
+  .node .member{font-family:${MONO_FONT}; font-size:10.5px}
+  .node.ghost .body{stroke-dasharray:5 4; fill:var(--canvas)}
+  .node.ghost text{fill:var(--ghost)}
+  .node.dim, .edge.dim, .elabel.dim{opacity:.18}
+  .node.selected .body{stroke-width:2.6}
+  .node .halo{fill:none; stroke:none}
+  .node.selected .halo{stroke:var(--accent); stroke-width:1.5; stroke-dasharray:3 3}
+  .edge path{fill:none; stroke:var(--muted); stroke-width:1.5; cursor:pointer}
+  .edge.async path{stroke-dasharray:none}
+  .edge.data path, .edge.dependency path{stroke-dasharray:6 4}
+  .edge.hl path{stroke:var(--accent); stroke-width:2.2}
+  .edge .hit{stroke:transparent; stroke-width:12}
+  .elabel{cursor:pointer}
+  .elabel rect{fill:var(--canvas); stroke:var(--line); rx:4}
+  .elabel text{fill:var(--muted); font-size:10.5px; font-family:${SYS_FONT}}
+  .elabel.hl text{fill:var(--accent)}
+  .elabel.hl rect{stroke:var(--accent)}
+  .elabel.toggle text{fill:var(--accent); font-weight:600}
+  .elabel.toggle rect{stroke:var(--accent)}
+  .elabel.toggle:hover rect{fill:var(--chip)}
+  .seq .head rect{fill:var(--panel); stroke-width:1.4; cursor:pointer}
+  .seq .head text{fill:var(--ink); font-size:12.5px; font-weight:600; font-family:${SYS_FONT}; cursor:pointer}
+  .seq .life{stroke:var(--line); stroke-dasharray:4 4; stroke-width:1}
+  .seq .msg path{fill:none; stroke:var(--ink); stroke-width:1.4}
+  .seq .msg.return path{stroke-dasharray:5 4; stroke:var(--muted)}
+  .seq .msg text{fill:var(--ink); font-size:11.5px; font-family:${SYS_FONT}}
+  .seq .msg .idx{fill:var(--muted); font-size:10px}
+  .seq .note rect{fill:var(--notebg); stroke:var(--note); stroke-width:.8}
+  .seq .note text{fill:var(--note); font-size:10.5px; font-style:italic; font-family:${SYS_FONT}}
+  .ftitle{fill:var(--ink); font-size:15px; font-weight:650; font-family:${SYS_FONT}}
+  .fsubtitle{fill:var(--muted); font-size:12px; font-family:${SYS_FONT}}
+`;
+
+/* ============================ state ============================ */
+const state = { view:'structure', ctx:null, flow:null, sel:null, t:{x:60,y:60,k:1}, q:'', xEdges:new Set() };
+let nodeById = {}, childrenOf = {}, roots = [], flowsById = {};
+let curLayout = null;   // last structure layout {pos:Map, bounds}
+let curVisible = null;  // {vnodes, vedges}
+
+/* ======================== saved layout ========================
+Boxes the user drags are pinned per drill-down view and persisted to
+localStorage, so the arrangement survives drilling in and out, a reload, and a
+rebuild of this file from the same model. Storage is best-effort: if it is
+unavailable (private windows, a browser that blocks storage on file:// URLs)
+pins still hold for the session and nothing else changes. */
+const LAYOUT_NS = 'uml-explorer:layout:';
+const ROOT_KEY = '';   // view key for "no container"; node ids are never empty, so it can't collide
+let layoutKey = LAYOUT_NS + 'unknown';
+let layoutStore = { v:1, views:{} };   // view key -> { nodeId: {x,y} }
+
+const ctxKey = () => state.ctx || ROOT_KEY;
+const pinsFor = ck => layoutStore.views[ck] || (layoutStore.views[ck] = {});
+const hasPins = ck => Object.keys(layoutStore.views[ck] || {}).length > 0;
+
+function loadLayout(){
+  layoutKey = LAYOUT_NS + (MODEL.title || 'architecture');
+  let parsed = null;
+  try { parsed = JSON.parse(localStorage.getItem(layoutKey)); } catch(_){ return; }
+  if (!parsed || parsed.v !== 1 || !parsed.views || typeof parsed.views !== 'object') return;
+  // Drop pins for ids the model no longer has, so a regenerated diagram doesn't
+  // carry dead entries around forever.
+  for (const ck in parsed.views) {
+    const pins = parsed.views[ck];
+    if (!pins || typeof pins !== 'object') continue;
+    if (ck !== ROOT_KEY && !nodeById[ck]) continue;   // container itself is gone
+    const clean = {};
+    for (const id in pins) {
+      const p = pins[id];
+      if (nodeById[id] && p && Number.isFinite(p.x) && Number.isFinite(p.y)) clean[id] = { x:p.x, y:p.y };
+    }
+    if (Object.keys(clean).length) layoutStore.views[ck] = clean;
+  }
+}
+function saveLayout(){
+  for (const ck in layoutStore.views) if (!hasPins(ck)) delete layoutStore.views[ck];
+  try {
+    if (Object.keys(layoutStore.views).length) localStorage.setItem(layoutKey, JSON.stringify(layoutStore));
+    else localStorage.removeItem(layoutKey);
+  } catch(_){}
+  syncResetBtn();
+}
+function resetLayout(allViews){
+  if (allViews) layoutStore.views = {}; else delete layoutStore.views[ctxKey()];
+  saveLayout();
+  render(); fit();
+}
+function syncResetBtn(){
+  const b = $('resetLayoutBtn');
+  if (b) b.disabled = state.view !== 'structure' || !hasPins(ctxKey());
+}
+
+/* ============================ utils ============================ */
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, ...kids){
+  const e = document.createElementNS(NS, tag);
+  for (const k in (attrs||{})) {
+    if (k === 'text') e.textContent = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  for (const k of kids) if (k) e.appendChild(k);
+  return e;
+}
+function hel(tag, cls, text){
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+const measureCtx = document.createElement('canvas').getContext('2d');
+function textW(s, font){ measureCtx.font = font; return measureCtx.measureText(s).width; }
+function wrap(s, maxW, font){
+  const words = String(s).split(/\s+/).filter(Boolean);
+  const lines = []; let cur = '';
+  for (const w of words) {
+    const t = cur ? cur + ' ' + w : w;
+    if (textW(t, font) <= maxW || !cur) cur = t; else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  return lines.length ? lines : [''];
+}
+function truncate(s, maxW, font){
+  if (textW(s, font) <= maxW) return s;
+  let t = s;
+  while (t.length > 1 && textW(t + '…', font) > maxW) t = t.slice(0, -1);
+  return t + '…';
+}
+function stColor(st){ return STEREO_COLORS[(st||'component').toLowerCase()] || STEREO_COLORS.component; }
+function mix(hex, pct){ // hex accent mixed into canvas — via color-mix in CSS strings
+  return `color-mix(in srgb, ${hex} ${pct}%, var(--canvas))`;
+}
+function pathOf(id){ const p = []; let n = id; while (n != null && nodeById[n]) { p.unshift(n); n = nodeById[n].parent; } return p; }
+function namePath(id){ return pathOf(id).map(i => nodeById[i].name).join(' › '); }
+
+/* ============================ indexing ============================ */
+function buildIndex(){
+  for (const n of MODEL.nodes) {
+    if (nodeById[n.id]) throw new Error('duplicate node id: ' + n.id);
+    nodeById[n.id] = n;
+  }
+  for (const n of MODEL.nodes) {
+    if (n.parent != null) {
+      if (!nodeById[n.parent]) throw new Error(`node "${n.id}" has unknown parent "${n.parent}"`);
+      (childrenOf[n.parent] = childrenOf[n.parent] || []).push(n.id);
+    } else roots.push(n.id);
+  }
+  for (const e of (MODEL.edges||[])) {
+    if (!nodeById[e.from] || !nodeById[e.to]) throw new Error(`edge ${e.from} → ${e.to}: unknown endpoint`);
+  }
+  for (const f of (MODEL.flows||[])) flowsById[f.id] = f;
+}
+
+/* ================== visibility & edge roll-up ================== */
+function repFor(id, ctx){
+  const p = pathOf(id);
+  if (ctx == null) return p[0];
+  const idx = p.indexOf(ctx);
+  if (idx >= 0) return p[idx+1] || null;   // inside ctx (null if edge touches ctx itself)
+  const cp = pathOf(ctx);
+  let k = 0;
+  while (k < p.length && k < cp.length && p[k] === cp[k]) k++;
+  return p[Math.min(k, p.length-1)];
+}
+function computeVisible(ctx){
+  const inside = ctx == null ? roots.slice() : (childrenOf[ctx] || []).slice();
+  const insideSet = new Set(inside);
+  const agg = new Map(); // "f→t" -> {from,to,edges[]}
+  const ghosts = new Set();
+  for (const e of (MODEL.edges||[])) {
+    const f = repFor(e.from, ctx), t = repFor(e.to, ctx);
+    if (f == null || t == null || f === t) continue;
+    if (!insideSet.has(f) && !insideSet.has(t)) continue; // fully external
+    if (!insideSet.has(f)) ghosts.add(f);
+    if (!insideSet.has(t)) ghosts.add(t);
+    const key = f + '|' + t;
+    if (!agg.has(key)) agg.set(key, { from:f, to:t, edges:[] });
+    agg.get(key).edges.push(e);
+  }
+  const vnodes = inside.map(id => ({ id, ghost:false }))
+    .concat([...ghosts].map(id => ({ id, ghost:true })));
+  const vedges = [...agg.values()].map(a => {
+    const kinds = new Set(a.edges.map(e => e.kind || 'sync'));
+    return { ...a, kind: kinds.size === 1 ? [...kinds][0] : 'sync',
+      label: a.edges.length === 1 ? (a.edges[0].label || '') :
+        (new Set(a.edges.map(e=>e.label)).size === 1 ? a.edges[0].label + ' ×' + a.edges.length
+                                                     : a.edges.length + ' interactions') };
+  });
+  return { vnodes, vedges };
+}
+
+/* ============================ metrics ============================ */
+function nodeMetrics(v){
+  const n = nodeById[v.id];
+  const nameFont = `600 13px ${SYS_FONT}`;
+  if (n.class) {
+    const memberFont = `10.5px ${MONO_FONT}`;
+    const attrs = n.class.attributes || [], meths = n.class.methods || [];
+    let w = Math.max(textW(n.name, nameFont) + 30,
+      ...attrs.concat(meths).map(m => textW(m, memberFont) + 24), 170);
+    w = Math.min(w, 300);
+    const headH = 40;
+    const h = headH + Math.max(attrs.length,1)*15 + 8 + Math.max(meths.length,1)*15 + 8;
+    return { w, h, cls:true, nameLines:[n.name] };
+  }
+  const w = NODE_W;
+  const nameLines = wrap(n.name, w - 46, nameFont);
+  const kids = (childrenOf[n.id] || []).length;
+  let h = 11 + 14 + nameLines.length*17 + 4;
+  if (n.tech) h += 15;
+  if (kids && !v.ghost) h += 17;
+  h = Math.max(h + 10, 62);
+  return { w, h, cls:false, nameLines, kids };
+}
+
+/* ============================ layout ============================ */
+function layoutView(visible){
+  const ids = visible.vnodes.map(v => v.id);
+  const idx = new Map(ids.map((id,i)=>[id,i]));
+  const N = ids.length;
+  const out = Array.from({length:N}, ()=>[]);
+  const inn = Array.from({length:N}, ()=>[]);
+  const edgePairs = [];
+  for (const e of visible.vedges) {
+    const a = idx.get(e.from), b = idx.get(e.to);
+    if (a==null || b==null || a===b) continue;
+    edgePairs.push([a,b]);
+  }
+  // cycle removal (DFS): reverse back edges for layering only
+  const color = new Array(N).fill(0);
+  const dag = [];
+  const adjTmp = Array.from({length:N}, ()=>[]);
+  edgePairs.forEach(([a,b],i)=>adjTmp[a].push([b,i]));
+  const reversed = new Set();
+  function dfs(u){
+    color[u]=1;
+    for (const [v] of adjTmp[u]) {
+      if (color[v]===0) dfs(v);
+      else if (color[v]===1) reversed.add(u+'-'+v);
+    }
+    color[u]=2;
+  }
+  for (let i=0;i<N;i++) if (color[i]===0) dfs(i);
+  for (const [a,b] of edgePairs) {
+    if (reversed.has(a+'-'+b)) dag.push([b,a]); else dag.push([a,b]);
+  }
+  // longest-path layering
+  const layer = new Array(N).fill(0);
+  const indeg = new Array(N).fill(0);
+  const dadj = Array.from({length:N}, ()=>[]);
+  for (const [a,b] of dag) { dadj[a].push(b); indeg[b]++; }
+  const q = [];
+  for (let i=0;i<N;i++) if (indeg[i]===0) q.push(i);
+  let qi=0;
+  while (qi<q.length) {
+    const u=q[qi++];
+    for (const v of dadj[u]) {
+      layer[v] = Math.max(layer[v], layer[u]+1);
+      if (--indeg[v]===0) q.push(v);
+    }
+  }
+  // group layers
+  const maxL = Math.max(0, ...layer);
+  const layers = Array.from({length:maxL+1}, ()=>[]);
+  for (let i=0;i<N;i++) layers[layer[i]].push(i);
+  // neighbors for ordering
+  for (const [a,b] of dag) { out[a].push(b); inn[b].push(a); }
+  const orderPos = new Array(N).fill(0);
+  layers.forEach(L => L.forEach((n,i)=>orderPos[n]=i));
+  for (let it=0; it<4; it++) {
+    const dirs = it%2===0 ? layers : [...layers].reverse();
+    for (const L of dirs) {
+      const bary = n => {
+        const nb = inn[n].concat(out[n]);
+        if (!nb.length) return orderPos[n];
+        return nb.reduce((s,m)=>s+orderPos[m],0)/nb.length;
+      };
+      L.sort((a,b)=>bary(a)-bary(b));
+      L.forEach((n,i)=>orderPos[n]=i);
+    }
+  }
+  // metrics + coordinates
+  const mets = visible.vnodes.map(v => nodeMetrics(v));
+  const colW = layers.map(L => Math.max(0,...L.map(i=>mets[i].w)));
+  const colX = []; let x = 0;
+  for (let l=0;l<layers.length;l++){ colX[l]=x; x += colW[l] + GAP_X; }
+  const colH = layers.map(L => L.reduce((s,i)=>s+mets[i].h,0) + Math.max(0,L.length-1)*GAP_Y);
+  const maxH = Math.max(0,...colH);
+  const pos = new Map();
+  layers.forEach((L,l)=>{
+    let y = (maxH - colH[l]) / 2;
+    for (const i of L) {
+      pos.set(ids[i], { x: colX[l] + (colW[l]-mets[i].w)/2, y, w:mets[i].w, h:mets[i].h, m:mets[i], layer:l });
+      y += mets[i].h + GAP_Y;
+    }
+  });
+  const bounds = { w: Math.max(1, x - GAP_X), h: Math.max(1, maxH) };
+  return { pos, bounds };
+}
+
+/* ============================ drawing ============================ */
+function clearSvg(){
+  const svg = $('svg');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const defs = el('defs');
+  const mk = (id, fill, path, color) => {
+    const m = el('marker', { id, viewBox:'0 0 12 12', refX:'10', refY:'6',
+      markerWidth:'9', markerHeight:'9', orient:'auto-start-reverse' });
+    m.appendChild(el('path', { d:path, fill: fill?color:'none', stroke:color, 'stroke-width':'1.6', 'stroke-linejoin':'round', 'stroke-linecap':'round' }));
+    defs.appendChild(m);
+  };
+  const muted = 'var(--muted)', acc = 'var(--accent)', ink = 'var(--ink)';
+  mk('arrF', true, 'M1,1 L11,6 L1,11 Z', muted);
+  mk('arrO', false, 'M1,1 L11,6 L1,11', muted);
+  mk('arrF-hl', true, 'M1,1 L11,6 L1,11 Z', acc);
+  mk('arrO-hl', false, 'M1,1 L11,6 L1,11', acc);
+  mk('arrF-ink', true, 'M1,1 L11,6 L1,11 Z', ink);
+  mk('arrO-ink', false, 'M1,1 L11,6 L1,11', ink);
+  mk('arrO-mut', false, 'M1,1 L11,6 L1,11', muted);
+  svg.appendChild(defs);
+  const st = el('style'); st.textContent = SVG_CSS; svg.appendChild(st);
+  const world = el('g', { id:'world' });
+  svg.appendChild(world);
+  return world;
+}
+function applyTransform(){
+  const w = document.getElementById('world');
+  if (w) w.setAttribute('transform', `translate(${state.t.x},${state.t.y}) scale(${state.t.k})`);
+}
+
+function drawStereoGlyph(g, st, x, y, color){
+  st = (st||'').toLowerCase();
+  if (st==='database'||st==='store'||st==='cache') {
+    g.appendChild(el('path',{d:`M${x},${y+2.5} a6,2.5 0 0 0 12,0 v6 a6,2.5 0 0 1 -12,0 z`, fill:'none', stroke:color, 'stroke-width':'1.2'}));
+    g.appendChild(el('ellipse',{cx:x+6, cy:y+2.5, rx:6, ry:2.5, fill:'none', stroke:color, 'stroke-width':'1.2'}));
+  } else if (st==='queue'||st==='topic') {
+    g.appendChild(el('path',{d:`M${x},${y+2} h9 l4,4 -4,4 h-9 z`, fill:'none', stroke:color, 'stroke-width':'1.2', 'stroke-linejoin':'round'}));
+  } else if (st==='actor'||st==='person') {
+    g.appendChild(el('circle',{cx:x+6, cy:y+3, r:2.6, fill:'none', stroke:color, 'stroke-width':'1.2'}));
+    g.appendChild(el('path',{d:`M${x+1},${y+11.5} a5,5 0 0 1 10,0`, fill:'none', stroke:color, 'stroke-width':'1.2'}));
+  } else { // UML component glyph
+    g.appendChild(el('rect',{x:x+3, y, width:10, height:12, fill:'none', stroke:color, 'stroke-width':'1.2'}));
+    g.appendChild(el('rect',{x, y:y+2.2, width:6, height:2.8, fill:'var(--panel)', stroke:color, 'stroke-width':'1.2'}));
+    g.appendChild(el('rect',{x, y:y+7, width:6, height:2.8, fill:'var(--panel)', stroke:color, 'stroke-width':'1.2'}));
+  }
+}
+
+function drawNode(world, v, p){
+  const n = nodeById[v.id];
+  const color = stColor(n.stereotype);
+  const g = el('g', { class:'node' + (v.ghost?' ghost':'') + (state.sel && state.sel.type==='node' && state.sel.id===v.id?' selected':''), 'data-id':v.id });
+  g.appendChild(el('rect', { class:'halo', x:p.x-5, y:p.y-5, width:p.w+10, height:p.h+10, rx:12 }));
+  const isStore = /^(database|store|cache)$/.test((n.stereotype||'').toLowerCase());
+  const isQueue = /^(queue|topic)$/.test((n.stereotype||'').toLowerCase());
+  if (isStore && !p.m.cls) {
+    const ry = 9;
+    g.appendChild(el('path', { class:'body', stroke:color, fill: v.ghost?'var(--canvas)':mix(color,10),
+      d:`M${p.x},${p.y+ry} a${p.w/2},${ry} 0 0 1 ${p.w},0 v${p.h-2*ry} a${p.w/2},${ry} 0 0 1 -${p.w},0 z` }));
+    g.appendChild(el('path', { d:`M${p.x},${p.y+ry} a${p.w/2},${ry} 0 0 0 ${p.w},0`, fill:'none', stroke:color, 'stroke-width':'1.2' }));
+  } else if (isQueue && !p.m.cls) {
+    const rx = 12;
+    g.appendChild(el('path', { class:'body', stroke:color, fill: v.ghost?'var(--canvas)':mix(color,10),
+      d:`M${p.x+rx},${p.y} h${p.w-2*rx} a${rx},${p.h/2} 0 0 1 0,${p.h} h-${p.w-2*rx} a${rx},${p.h/2} 0 0 1 0,-${p.h} z` }));
+    g.appendChild(el('path', { d:`M${p.x+p.w-rx},${p.y} a${rx},${p.h/2} 0 0 0 0,${p.h}`, fill:'none', stroke:color, 'stroke-width':'1.2' }));
+  } else {
+    g.appendChild(el('rect', { class:'body', x:p.x, y:p.y, width:p.w, height:p.h, rx:8, stroke:color, fill: v.ghost?'var(--canvas)':mix(color,10) }));
+    if (p.m.kids && !v.ghost)
+      g.appendChild(el('rect', { x:p.x+3, y:p.y+3, width:p.w-6, height:p.h-6, rx:5.5, fill:'none', stroke:color, 'stroke-width':'.7', opacity:'.55' }));
+  }
+  if (p.m.cls) {
+    const n2 = n.class || {};
+    let y = p.y;
+    g.appendChild(el('text', { class:'stereo', x:p.x+p.w/2, y:y+15, 'text-anchor':'middle', text:'«class»' }));
+    g.appendChild(el('text', { class:'nname', x:p.x+p.w/2, y:y+31, 'text-anchor':'middle', text:n.name }));
+    y = p.y + 40;
+    g.appendChild(el('line',{x1:p.x, y1:y, x2:p.x+p.w, y2:y, stroke:color, 'stroke-width':'1'}));
+    for (const a of (n2.attributes && n2.attributes.length ? n2.attributes : [' '])) {
+      g.appendChild(el('text',{class:'member', x:p.x+10, y:y+12, text:truncate(a, p.w-20, `10.5px ${MONO_FONT}`)})); y += 15;
+    }
+    y += 4;
+    g.appendChild(el('line',{x1:p.x, y1:y, x2:p.x+p.w, y2:y, stroke:color, 'stroke-width':'1'}));
+    for (const m of (n2.methods && n2.methods.length ? n2.methods : [' '])) {
+      g.appendChild(el('text',{class:'member', x:p.x+10, y:y+12, text:truncate(m, p.w-20, `10.5px ${MONO_FONT}`)})); y += 15;
+    }
+  } else {
+    const xoff = isQueue ? 10 : 0;
+    let y = p.y + 16 + (isStore ? 8 : 0);
+    g.appendChild(el('text', { class:'stereo', x:p.x+12+xoff, y, text:'«' + (n.stereotype||'component') + '»' }));
+    if (!isStore && !isQueue) drawStereoGlyph(g, n.stereotype, p.x+p.w-24, p.y+7, color);
+    y += 17;
+    for (const line of p.m.nameLines) {
+      g.appendChild(el('text', { class:'nname', x:p.x+12+xoff, y, text:line })); y += 17;
+    }
+    if (n.tech) { g.appendChild(el('text', { class:'tech', x:p.x+12+xoff, y, text:truncate(n.tech, p.w-24, `10.5px ${SYS_FONT}`) })); y += 15; }
+    if (p.m.kids && !v.ghost) {
+      const badge = el('text', { class:'kids', x:p.x+12+xoff, y:p.y+p.h-9, text:'⊞ ' + p.m.kids + ' inside — click to open' });
+      badge.addEventListener('click', ev => { ev.stopPropagation(); navigate(v.id); });
+      g.appendChild(badge);
+    }
+    if (v.ghost)
+      g.appendChild(el('title', {text:'Outside this view: ' + namePath(v.id) + ' — double-click to jump there'}));
+  }
+  g.addEventListener('click', ev => { ev.stopPropagation(); if (g.__moved) { g.__moved = false; return; } select({type:'node', id:v.id}); });
+  // The coordinates this box was drawn at. The drag transform must always be
+  // relative to these, no matter how many separate drags (or clicks) follow.
+  g.__x0 = p.x; g.__y0 = p.y;
+  enableNodeDrag(g, v.id);
+  g.addEventListener('dblclick', ev => {
+    ev.stopPropagation(); ev.preventDefault();
+    if (v.ghost) { navigate(nodeById[v.id].parent ?? null, v.id); }
+    else if ((childrenOf[v.id]||[]).length) navigate(v.id);
+  });
+  g.addEventListener('mouseenter', ()=>hover(v.id, true));
+  g.addEventListener('mouseleave', ()=>hover(v.id, false));
+  world.appendChild(g);
+}
+
+function bez(t, p0, p1, p2, p3){
+  const u = 1-t;
+  return { x: u*u*u*p0.x + 3*u*u*t*p1.x + 3*u*t*t*p2.x + t*t*t*p3.x,
+           y: u*u*u*p0.y + 3*u*u*t*p1.y + 3*u*t*t*p2.y + t*t*t*p3.y };
+}
+function drawEdge(world, e, layout, opts = {}){
+  const off = opts.off || 0;
+  const s = layout.pos.get(e.from), t = layout.pos.get(e.to);
+  if (!s || !t) return;
+  let p0, p1, p2, p3;
+  if (t.layer > s.layer) {
+    p0 = { x:s.x+s.w, y:s.y+s.h/2+off }; p3 = { x:t.x-3, y:t.y+t.h/2+off };
+    const dx = Math.max(40, (p3.x-p0.x)*0.42);
+    p1 = { x:p0.x+dx, y:p0.y }; p2 = { x:p3.x-dx, y:p3.y };
+  } else if (t.layer === s.layer) {
+    const right = Math.max(s.x+s.w, t.x+t.w) + 60 + off;
+    p0 = { x:s.x+s.w, y:s.y+s.h/2+off }; p3 = { x:t.x+t.w+3, y:t.y+t.h/2+off };
+    p1 = { x:right, y:p0.y }; p2 = { x:right, y:p3.y };
+  } else { // back edge — route beneath
+    const below = Math.max(s.y+s.h, t.y+t.h) + 70 + off;
+    p0 = { x:s.x+s.w/2, y:s.y+s.h }; p3 = { x:t.x+t.w/2, y:t.y+t.h+3 };
+    p1 = { x:p0.x, y:below }; p2 = { x:p3.x, y:below };
+  }
+  const d = `M${p0.x},${p0.y} C${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`;
+  const kind = e.kind || 'sync';
+  const g = el('g', { class:'edge ' + kind, 'data-key': e.from+'|'+e.to });
+  const marker = kind === 'sync' ? 'arrF' : 'arrO';
+  g.appendChild(el('path', { class:'hit', d, fill:'none' }));
+  g.appendChild(el('path', { class:'vis', d, 'marker-end':`url(#${marker})`, 'data-mk':marker }));
+  g.addEventListener('click', ev => { ev.stopPropagation(); select({type:'edge', edge:e}); });
+  world.appendChild(g);
+  const labelText = opts.labelText != null ? opts.labelText : e.label;
+  if (labelText) {
+    const mid = bez(0.5, p0, p1, p2, p3);
+    const font = `10.5px ${SYS_FONT}`;
+    const label = truncate(labelText, 190, font);
+    const w2 = textW(label, font)+12;
+    const lg = el('g', { class:'elabel' + (opts.toggle ? ' toggle' : ''), 'data-key': e.from+'|'+e.to });
+    lg.appendChild(el('rect', { x:mid.x-w2/2, y:mid.y-9, width:w2, height:17, rx:4 }));
+    lg.appendChild(el('text', { x:mid.x, y:mid.y+3.5, 'text-anchor':'middle', text:label }));
+    lg.appendChild(el('title', { text: opts.toggle ? 'Click to expand into individual interactions' : labelText }));
+    lg.addEventListener('click', ev => {
+      ev.stopPropagation();
+      if (opts.onLabelClick) opts.onLabelClick(); else select({type:'edge', edge:e});
+    });
+    world.appendChild(lg);
+  }
+}
+function drawCollapsePill(world, e, layout, k){
+  const s = layout.pos.get(e.from), t = layout.pos.get(e.to);
+  if (!s || !t) return;
+  const mx = (s.x + s.w + t.x) / 2;
+  const my = (s.y + s.h/2 + t.y + t.h/2) / 2 - ((k-1)/2)*26 - 22;
+  const font = `10.5px ${SYS_FONT}`;
+  const txt = '⊖ collapse';
+  const w2 = textW(txt, font) + 12;
+  const lg = el('g', { class:'elabel toggle', 'data-key': e.from+'|'+e.to });
+  lg.appendChild(el('rect', { x:mx-w2/2, y:my-9, width:w2, height:17, rx:4 }));
+  lg.appendChild(el('text', { x:mx, y:my+3.5, 'text-anchor':'middle', text:txt }));
+  lg.addEventListener('click', ev => {
+    ev.stopPropagation();
+    state.xEdges.delete(e.from + '|' + e.to);
+    renderStructure();
+  });
+  world.appendChild(lg);
+}
+
+function hover(id, on){
+  document.querySelectorAll('.edge, .elabel').forEach(g => {
+    const [f,t] = g.getAttribute('data-key').split('|');
+    const touch = f===id || t===id;
+    g.classList.toggle('hl', on && touch);
+    const vis = g.querySelector('.vis');
+    if (vis) {
+      const mk = vis.getAttribute('data-mk');
+      vis.setAttribute('marker-end', `url(#${mk}${on && touch ? '-hl' : ''})`);
+    }
+  });
+}
+
+/* ==================== drag to move (structure view) ==================== */
+function drawStructureEdges(world){
+  for (const e of curVisible.vedges) {
+    const key = e.from + '|' + e.to;
+    if (e.edges.length > 1 && state.xEdges.has(key)) {
+      // expanded bundle: fan out into the individual interactions
+      e.edges.forEach((raw, i) => {
+        const off = (i - (e.edges.length-1)/2) * 26;
+        drawEdge(world, { from:e.from, to:e.to, kind: raw.kind || 'sync',
+          label: raw.label || 'interaction', edges:[raw] }, curLayout, { off });
+      });
+      drawCollapsePill(world, e, curLayout, e.edges.length);
+    } else if (e.edges.length > 1) {
+      drawEdge(world, e, curLayout, { labelText: '⊕ ' + e.label, toggle: true,
+        onLabelClick: () => { state.xEdges.add(key); renderStructure(); } });
+    } else {
+      drawEdge(world, e, curLayout);
+    }
+  }
+}
+// Re-route every structure edge from the current node positions. Called on each
+// drag move; the dedicated edge layer keeps arrows painted beneath the boxes.
+function rerouteEdges(){
+  const world = document.getElementById('world');
+  const layer = world && world.querySelector('g.edges');
+  if (!layer) return;
+  while (layer.firstChild) layer.removeChild(layer.firstChild);
+  drawStructureEdges(layer);
+}
+// Make a structure node draggable. Moving it updates its layout position (so the
+// arrows recompute) and pins it in the saved layout for this view, so it stays
+// put across re-renders, drill-down, and reloads.
+function enableNodeDrag(g, id){
+  g.addEventListener('pointerdown', ev => {
+    if (ev.button !== 0 || state.view !== 'structure') return;
+    const p = curLayout && curLayout.pos.get(id);
+    if (!p) return;
+    const pins = pinsFor(ctxKey());
+    ev.stopPropagation();               // don't also start a canvas pan
+    const startX = ev.clientX, startY = ev.clientY, ox = p.x, oy = p.y;
+    let moved = false;
+    try { g.setPointerCapture(ev.pointerId); } catch(_){}
+    g.style.cursor = 'grabbing';
+    const move = e2 => {
+      if (!moved && Math.abs(e2.clientX-startX) + Math.abs(e2.clientY-startY) > 3) moved = true;
+      if (!moved) return;   // click jitter must not touch position, pins, or transform
+      p.x = ox + (e2.clientX - startX) / state.t.k;
+      p.y = oy + (e2.clientY - startY) / state.t.k;
+      g.setAttribute('transform', `translate(${p.x - g.__x0},${p.y - g.__y0})`);
+      pins[id] = { x:p.x, y:p.y };
+      rerouteEdges();
+    };
+    const up = e2 => {
+      g.removeEventListener('pointermove', move);
+      g.removeEventListener('pointerup', up);
+      try { g.releasePointerCapture(e2.pointerId); } catch(_){}
+      g.style.cursor = 'grab';
+      if (moved) { g.__moved = true; saveLayout(); }   // __moved swallows the trailing click so it doesn't select
+    };
+    g.addEventListener('pointermove', move);
+    g.addEventListener('pointerup', up);
+  });
+}
+
+/* ============================ structure view ============================ */
+function renderStructure(){
+  $('flowCards').classList.remove('open');
+  $('backFlow').classList.remove('open');
+  $('hint').style.display = '';
+  const world = clearSvg();
+  curVisible = computeVisible(state.ctx);
+  if (!curVisible.vnodes.length) {
+    world.appendChild(el('text', { x:20, y:40, fill:'var(--muted)', text:'(no components at this level)' }));
+    curLayout = { pos:new Map(), bounds:{w:300,h:100} };
+  } else {
+    curLayout = layoutView(curVisible);
+    const pins = pinsFor(ctxKey());
+    for (const id in pins) { const pp = curLayout.pos.get(id); if (pp) { pp.x = pins[id].x; pp.y = pins[id].y; } }
+    growBounds(curLayout);   // a box dragged past the auto-layout extent must still fit/export
+    const edgeLayer = el('g', { class:'edges' }); world.appendChild(edgeLayer);
+    const nodeLayer = el('g', { class:'nodes' }); world.appendChild(nodeLayer);
+    drawStructureEdges(edgeLayer);
+    for (const v of curVisible.vnodes) drawNode(nodeLayer, v, curLayout.pos.get(v.id));
+  }
+  applyTransform();
+  applySearchDim();
+  renderCrumbs();
+}
+// Widen the layout bounds to cover every node's actual box. Pinned positions can
+// sit outside (or left/above) the auto-layout extent, and both fit() and the SVG
+// export frame the view from these bounds.
+function growBounds(layout){
+  let x0 = 0, y0 = 0, x1 = layout.bounds.w, y1 = layout.bounds.h;
+  for (const p of layout.pos.values()) {
+    x0 = Math.min(x0, p.x);        y0 = Math.min(y0, p.y);
+    x1 = Math.max(x1, p.x + p.w);  y1 = Math.max(y1, p.y + p.h);
+  }
+  layout.bounds = { x0, y0, w: Math.max(1, x1-x0), h: Math.max(1, y1-y0) };
+}
+
+function renderCrumbs(){
+  const c = $('crumbs'); c.innerHTML = '';
+  const mkBtn = (label, ctx, cur) => {
+    const b = hel('button', 'crumb' + (cur?' cur':''), label);
+    if (!cur) b.addEventListener('click', ()=>navigate(ctx));
+    c.appendChild(b);
+  };
+  if (state.view === 'flows') {
+    mkBtn(MODEL.title || 'Architecture', null, false);
+    c.appendChild(hel('span','sep','›'));
+    const f = state.flow && flowsById[state.flow];
+    mkBtn(f ? 'Flow: ' + f.name : 'Flows', null, true);
+    return;
+  }
+  const chain = state.ctx ? pathOf(state.ctx) : [];
+  mkBtn(MODEL.title || 'Architecture', null, chain.length===0);
+  for (let i=0;i<chain.length;i++){
+    c.appendChild(hel('span','sep','›'));
+    mkBtn(nodeById[chain[i]].name, chain[i], i===chain.length-1);
+  }
+}
+
+/* ============================ flows view ============================ */
+function renderFlowCards(){
+  $('hint').style.display = 'none';
+  clearSvg();
+  $('backFlow').classList.remove('open');
+  const fc = $('flowCards'); fc.innerHTML = ''; fc.classList.add('open');
+  const grid = hel('div','grid');
+  const flows = MODEL.flows || [];
+  if (!flows.length) grid.appendChild(hel('p', null, 'No flows defined in this model.'));
+  for (const f of flows) {
+    const card = hel('button','card');
+    card.appendChild(hel('h3', null, f.name));
+    if (f.description) card.appendChild(hel('p', null, f.description));
+    card.appendChild(hel('div','n', (f.steps||[]).length + ' steps'));
+    card.addEventListener('click', ()=>{ state.flow = f.id; render(); });
+    grid.appendChild(card);
+  }
+  fc.appendChild(grid);
+  renderCrumbs();
+}
+function flowParticipants(f){
+  const seen = [];
+  const push = id => { if (id && !seen.includes(id)) seen.push(id); };
+  for (const id of (f.participants||[])) push(id);
+  for (const s of (f.steps||[])) { push(s.from); push(s.to); }
+  return seen;
+}
+function renderFlow(f){
+  $('flowCards').classList.remove('open');
+  $('hint').style.display = 'none';
+  $('backFlow').classList.add('open');
+  const world = clearSvg();
+  const parts = flowParticipants(f).filter(id => nodeById[id]);
+  const font = `600 12.5px ${SYS_FONT}`;
+  const msgFont = `11.5px ${SYS_FONT}`;
+  const steps = f.steps || [];
+  let spacing = 180;
+  for (let i=0;i<steps.length;i++){
+    const a = parts.indexOf(steps[i].from), b = parts.indexOf(steps[i].to);
+    const span = Math.max(1, Math.abs(a-b));
+    const need = (textW(steps[i].message||'', msgFont) + 50) / span;
+    spacing = Math.max(spacing, Math.min(need, 460));
+  }
+  const boxW = i => Math.max(110, textW(nodeById[parts[i]].name, font) + 26);
+  const xs = [];
+  let x = 40;
+  for (let i=0;i<parts.length;i++){ xs.push(x + boxW(i)/2); x += Math.max(boxW(i)+40, spacing); }
+  const STEP_H = 54;
+  let extra = 0;
+  steps.forEach(s => { if (s.from===s.to) extra += 22; if (s.note) extra += 20; });
+  const topY = 66, headH = 38;
+  const botY = topY + headH + 30 + steps.length*STEP_H + extra + 30;
+  world.appendChild(el('text',{class:'ftitle', x:40, y:28, text:f.name}));
+  if (f.description) world.appendChild(el('text',{class:'fsubtitle', x:40, y:47, text:truncate(f.description, 900, `12px ${SYS_FONT}`)}));
+  const seq = el('g',{class:'seq'});
+  parts.forEach((id,i)=>{
+    const n = nodeById[id], color = stColor(n.stereotype);
+    seq.appendChild(el('line',{class:'life', x1:xs[i], y1:topY+headH, x2:xs[i], y2:botY}));
+    const hg = el('g',{class:'head'});
+    const w = boxW(i);
+    hg.appendChild(el('rect',{x:xs[i]-w/2, y:topY, width:w, height:headH, rx:7, stroke:color, fill:mix(color,10)}));
+    hg.appendChild(el('text',{x:xs[i], y:topY+headH/2+4.5, 'text-anchor':'middle', text:n.name}));
+    hg.addEventListener('click', ev=>{ ev.stopPropagation(); select({type:'node', id}); });
+    seq.appendChild(hg);
+  });
+  let y = topY + headH + 44;
+  steps.forEach((s,si)=>{
+    const a = parts.indexOf(s.from), b = parts.indexOf(s.to);
+    if (a<0 || b<0) return;
+    const kind = s.kind || 'sync';
+    const mg = el('g',{class:'msg ' + kind});
+    const marker = kind==='sync' ? 'arrF-ink' : (kind==='return' ? 'arrO-mut' : 'arrO-ink');
+    if (a === b) {
+      const lx = xs[a];
+      mg.appendChild(el('path',{d:`M${lx},${y} h56 v18 h-53`, 'marker-end':`url(#${marker})`}));
+      mg.appendChild(el('text',{x:lx+64, y:y+13, text:s.message||''}));
+      mg.appendChild(el('text',{class:'idx', x:lx-14, y:y+4, 'text-anchor':'end', text:(si+1)+'.'}));
+      y += 22;
+    } else {
+      const x1 = xs[a], x2 = xs[b], dir = x2>x1?1:-1;
+      mg.appendChild(el('path',{d:`M${x1},${y} L${x2-3*dir},${y}`, 'marker-end':`url(#${marker})`}));
+      const midX = (x1+x2)/2;
+      mg.appendChild(el('text',{x:midX, y:y-6, 'text-anchor':'middle', text:truncate(s.message||'', Math.abs(x2-x1)-16, msgFont)}));
+      mg.appendChild(el('text',{class:'idx', x:Math.min(x1,x2)-14, y:y+4, 'text-anchor':'end', text:(si+1)+'.'}));
+    }
+    seq.appendChild(mg);
+    if (s.note) {
+      const nfont = `10.5px ${SYS_FONT}`;
+      const nw = textW(s.note, nfont)+16;
+      const nx = Math.min(xs[a], xs[b]) + Math.abs(xs[b]-xs[a])/2 - nw/2;
+      const ng = el('g',{class:'note'});
+      ng.appendChild(el('rect',{x:nx, y:y+6, width:nw, height:17, rx:3}));
+      ng.appendChild(el('text',{x:nx+8, y:y+18, text:s.note}));
+      seq.appendChild(ng);
+      y += 20;
+    }
+    y += STEP_H;
+  });
+  world.appendChild(seq);
+  curLayout = { pos:new Map(), bounds:{ w: x, h: botY } };
+  applyTransform();
+  renderCrumbs();
+}
+
+/* ============================ sidebar ============================ */
+function select(sel){
+  state.sel = sel;
+  document.querySelectorAll('.node').forEach(g =>
+    g.classList.toggle('selected', sel && sel.type==='node' && g.getAttribute('data-id')===sel.id));
+  renderSidebar();
+}
+function sideSection(parent, title){
+  const s = hel('section'); s.appendChild(hel('h4', null, title)); parent.appendChild(s); return s;
+}
+function renderSidebar(){
+  const sb = $('sidebar'); sb.innerHTML = ''; sb.classList.remove('empty');
+  if (!state.sel) { sb.classList.add('empty'); sb.textContent = 'Click a component or connection to inspect it.'; return; }
+  if (state.sel.type === 'node') {
+    const n = nodeById[state.sel.id];
+    const color = stColor(n.stereotype);
+    sb.appendChild(hel('h2', null, n.name));
+    const chip = hel('span','stchip','«' + (n.stereotype||'component') + '»');
+    chip.style.background = color;
+    sb.appendChild(chip);
+    const pp = pathOf(n.id);
+    if (pp.length > 1) sb.appendChild(hel('div','path', pp.slice(0,-1).map(i=>nodeById[i].name).join(' › ')));
+    if (n.description) { const s = sideSection(sb,'Description'); s.appendChild(hel('p', null, n.description)); }
+    if (n.tech) { const s = sideSection(sb,'Technology'); const c = hel('code', null, n.tech); s.appendChild(c); }
+    if (n.responsibilities && n.responsibilities.length) {
+      const s = sideSection(sb,'Responsibilities'); const ul = hel('ul');
+      n.responsibilities.forEach(r => ul.appendChild(hel('li', null, r))); s.appendChild(ul);
+    }
+    if (n.class) {
+      const s = sideSection(sb,'Members'); const ul = hel('ul');
+      (n.class.attributes||[]).concat(n.class.methods||[]).forEach(m => {
+        const li = hel('li'); li.appendChild(hel('code', null, m)); ul.appendChild(li);
+      });
+      s.appendChild(ul);
+    }
+    if (n.files && n.files.length) {
+      const s = sideSection(sb,'Code'); const d = hel('div','filelist');
+      n.files.forEach(f => { const r = hel('div'); r.appendChild(hel('code', null, f)); d.appendChild(r); });
+      s.appendChild(d);
+    }
+    const kids = childrenOf[n.id] || [];
+    if (kids.length) {
+      const s = sideSection(sb,'Contains');
+      kids.forEach(k => {
+        const b = hel('button','linkbtn', nodeById[k].name + '  («' + (nodeById[k].stereotype||'component') + '»)');
+        b.style.display='block'; b.style.margin='3px 0';
+        b.addEventListener('click', ()=>navigate(n.id, k));
+        s.appendChild(b);
+      });
+      const drill = hel('button','drill','⊞ Drill into ' + n.name);
+      drill.addEventListener('click', ()=>navigate(n.id));
+      s.appendChild(drill);
+    }
+    const rel = (MODEL.edges||[]).filter(e => {
+      const pf = pathOf(e.from), pt = pathOf(e.to);
+      return pf.includes(n.id) || pt.includes(n.id);
+    });
+    if (rel.length) {
+      const s = sideSection(sb,'Connections (' + rel.length + ')');
+      rel.slice(0,30).forEach(e => {
+        const outg = pathOf(e.from).includes(n.id);
+        const other = outg ? e.to : e.from;
+        const b = hel('button','conn');
+        b.appendChild(hel('span','dir', outg ? '→ ' : '← '));
+        b.appendChild(document.createTextNode((e.label||'link') + '  ·  ' + nodeById[other].name));
+        b.addEventListener('click', ()=>select({type:'edge', edge:{from:e.from, to:e.to, kind:e.kind, label:e.label, edges:[e]}}));
+        s.appendChild(b);
+      });
+    }
+    const inFlows = (MODEL.flows||[]).filter(f => flowParticipants(f).includes(n.id));
+    if (inFlows.length) {
+      const s = sideSection(sb,'Appears in flows');
+      inFlows.forEach(f => {
+        const b = hel('button','linkbtn', '▶ ' + f.name);
+        b.style.display='block'; b.style.margin='3px 0';
+        b.addEventListener('click', ()=>{ state.view='flows'; state.flow=f.id; setTab(); render(); });
+        s.appendChild(b);
+      });
+    }
+    if (n.notes) { const s = sideSection(sb,'Notes'); s.appendChild(hel('p', null, n.notes)); }
+  } else if (state.sel.type === 'edge') {
+    const ve = state.sel.edge;
+    const list = ve.edges || [ve];
+    sb.appendChild(hel('h2', null, nodeById[ve.from].name + ' → ' + nodeById[ve.to].name));
+    const chip = hel('span','stchip', ve.kind || 'sync');
+    chip.style.background = 'var(--muted)';
+    sb.appendChild(chip);
+    list.forEach(e => {
+      const s = sideSection(sb, (e.label || 'interaction'));
+      const from = nodeById[e.from], to = nodeById[e.to];
+      const p = hel('p', null, from.name + ' → ' + to.name + (e.kind ? '  (' + e.kind + ')' : ''));
+      s.appendChild(p);
+      if (e.tech) { const c = hel('code', null, e.tech); s.appendChild(c); }
+      if (e.description) s.appendChild(hel('p', null, e.description));
+    });
+  }
+  const meta = hel('div','meta');
+  meta.textContent = (MODEL.title||'') + (MODEL.generated ? ' · generated ' + MODEL.generated : '');
+  sb.appendChild(meta);
+}
+
+/* ============================ navigation ============================ */
+function navigate(ctx, selectId){
+  state.view = 'structure';
+  state.ctx = ctx;
+  state.flow = null;
+  state.xEdges = new Set();
+  setTab();
+  render();
+  if (selectId) select({type:'node', id:selectId}); else select(null);
+  fit();
+  syncHash();
+}
+function setTab(){
+  $('tabStructure').classList.toggle('on', state.view==='structure');
+  $('tabFlows').classList.toggle('on', state.view==='flows');
+}
+function render(){
+  if (state.view === 'flows') {
+    if (state.flow && flowsById[state.flow]) renderFlow(flowsById[state.flow]);
+    else renderFlowCards();
+  } else renderStructure();
+  syncResetBtn();
+  syncHash();
+}
+let hashGuard = false;
+function syncHash(){
+  hashGuard = true;
+  const parts = [];
+  if (state.view==='flows') { parts.push('view=flows'); if (state.flow) parts.push('flow='+encodeURIComponent(state.flow)); }
+  else if (state.ctx) parts.push('ctx='+encodeURIComponent(state.ctx));
+  const h = parts.length ? '#'+parts.join('&') : '';
+  if (location.hash !== h) history.replaceState(null,'',h||location.pathname.split('/').pop());
+  setTimeout(()=>hashGuard=false, 0);
+}
+function readHash(){
+  if (hashGuard) return;
+  const p = new URLSearchParams(location.hash.slice(1));
+  if (p.get('view')==='flows') { state.view='flows'; state.flow=p.get('flow'); }
+  else { state.view='structure'; state.ctx = p.get('ctx') && nodeById[p.get('ctx')] ? p.get('ctx') : null; }
+  setTab(); render(); fit();
+}
+
+/* ============================ pan / zoom ============================ */
+function fit(){
+  if (!curLayout) return;
+  const wrapR = $('canvasWrap').getBoundingClientRect();
+  const b = curLayout.bounds, x0 = b.x0 || 0, y0 = b.y0 || 0;
+  const bw = b.w, bh = b.h;
+  const k = Math.min((wrapR.width-80)/bw, (wrapR.height-80)/bh, 1.35);
+  state.t = { k, x: (wrapR.width - bw*k)/2 - x0*k, y: (wrapR.height - bh*k)/2 - y0*k };
+  applyTransform();
+}
+function setupPanZoom(){
+  const svg = $('svg');
+  svg.addEventListener('wheel', ev => {
+    ev.preventDefault();
+    const r = svg.getBoundingClientRect();
+    const mx = ev.clientX - r.left, my = ev.clientY - r.top;
+    const k2 = Math.min(4, Math.max(0.12, state.t.k * Math.exp(-ev.deltaY * 0.0016)));
+    state.t.x = mx - (mx - state.t.x) * (k2/state.t.k);
+    state.t.y = my - (my - state.t.y) * (k2/state.t.k);
+    state.t.k = k2;
+    applyTransform();
+  }, { passive:false });
+  // Pan WITHOUT pointer capture: capturing to the svg retargets pointerup —
+  // and with it the derived click/dblclick events — away from the node groups,
+  // which silently kills node selection and drill-down.
+  let drag = null, suppressClick = false;
+  svg.addEventListener('pointerdown', ev => {
+    if (ev.button !== 0) return;
+    suppressClick = false;
+    drag = { x:ev.clientX, y:ev.clientY, tx:state.t.x, ty:state.t.y, moved:false };
+  });
+  window.addEventListener('pointermove', ev => {
+    if (!drag) return;
+    const dx = ev.clientX-drag.x, dy = ev.clientY-drag.y;
+    if (!drag.moved && Math.abs(dx)+Math.abs(dy) > 4) { drag.moved = true; svg.classList.add('panning'); }
+    if (!drag.moved) return;
+    state.t.x = drag.tx+dx; state.t.y = drag.ty+dy;
+    applyTransform();
+  });
+  window.addEventListener('pointerup', ev => {
+    if (!drag) return;
+    svg.classList.remove('panning');
+    if (drag.moved) suppressClick = true;
+    else if (ev.target === svg || ev.target.id === 'world') select(null);
+    drag = null;
+  });
+  // swallow the click that ends a pan so it doesn't select whatever is under the cursor
+  svg.addEventListener('click', ev => {
+    if (suppressClick) { suppressClick = false; ev.stopPropagation(); }
+  }, true);
+  svg.addEventListener('dblclick', ev => { if (ev.target === svg) { if (state.view==='structure' && state.ctx) navigate(nodeById[state.ctx].parent ?? null); } });
+}
+
+/* ============================ search ============================ */
+function applySearchDim(){
+  const q = state.q.trim().toLowerCase();
+  document.querySelectorAll('.node').forEach(g => {
+    const n = nodeById[g.getAttribute('data-id')];
+    const hit = !q || (n.name + ' ' + (n.stereotype||'') + ' ' + (n.tech||'') + ' ' + (n.description||'')).toLowerCase().includes(q);
+    g.classList.toggle('dim', !!q && !hit);
+  });
+  document.querySelectorAll('.edge, .elabel').forEach(g => g.classList.toggle('dim', !!q));
+}
+function setupSearch(){
+  const inp = $('search'), res = $('results');
+  let items = [];
+  function refresh(){
+    state.q = inp.value;
+    applySearchDim();
+    const q = inp.value.trim().toLowerCase();
+    res.innerHTML = ''; items = [];
+    if (!q) { res.classList.remove('open'); return; }
+    const matches = MODEL.nodes.filter(n =>
+      (n.name + ' ' + (n.stereotype||'') + ' ' + (n.tech||'') + ' ' + (n.description||'')).toLowerCase().includes(q)).slice(0,12);
+    for (const n of matches) {
+      const b = hel('button','r');
+      b.appendChild(hel('div', null, n.name + '  «' + (n.stereotype||'component') + '»'));
+      b.appendChild(hel('div','path', namePath(n.id)));
+      b.addEventListener('click', ()=>{ inp.value=''; state.q=''; res.classList.remove('open'); navigate(n.parent ?? null, n.id); });
+      res.appendChild(b); items.push(b);
+    }
+    res.classList.toggle('open', matches.length>0);
+  }
+  inp.addEventListener('input', refresh);
+  inp.addEventListener('keydown', ev => {
+    if (ev.key==='Enter' && items.length) items[0].click();
+    if (ev.key==='Escape') { inp.value=''; refresh(); inp.blur(); }
+  });
+  document.addEventListener('click', ev => { if (!$('searchWrap').contains(ev.target)) res.classList.remove('open'); });
+}
+
+/* ============================ legend ============================ */
+function buildLegend(){
+  const lg = $('legend');
+  const mkSvg = inner => { const s = document.createElementNS(NS,'svg'); s.setAttribute('width','46'); s.setAttribute('height','14'); s.innerHTML = inner; return s; };
+  lg.appendChild(hel('h3', null, 'Connections'));
+  const kinds = [
+    ['sync call', '<line x1="2" y1="7" x2="36" y2="7" stroke="var(--muted)" stroke-width="1.5"/><path d="M36,2 L44,7 L36,12 Z" fill="var(--muted)"/>'],
+    ['async / event', '<line x1="2" y1="7" x2="36" y2="7" stroke="var(--muted)" stroke-width="1.5"/><path d="M36,2 L44,7 L36,12" fill="none" stroke="var(--muted)" stroke-width="1.5"/>'],
+    ['data / dependency', '<line x1="2" y1="7" x2="36" y2="7" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4"/><path d="M36,2 L44,7 L36,12" fill="none" stroke="var(--muted)" stroke-width="1.5"/>']
+  ];
+  for (const [name, svg] of kinds) {
+    const row = hel('div','row'); row.appendChild(mkSvg(svg)); row.appendChild(hel('span',null,name)); lg.appendChild(row);
+  }
+  lg.appendChild(hel('h3', null, 'Stereotypes in this model'));
+  const used = [...new Set(MODEL.nodes.map(n => (n.stereotype||'component').toLowerCase()))];
+  for (const st of used) {
+    const row = hel('div','row');
+    const sw = hel('span'); sw.style.cssText = `width:14px;height:14px;border-radius:4px;border:1.5px solid ${stColor(st)};background:color-mix(in srgb, ${stColor(st)} 14%, var(--canvas));flex:none`;
+    row.appendChild(sw); row.appendChild(hel('span',null,'«'+st+'»'));
+    lg.appendChild(row);
+  }
+  lg.appendChild(hel('h3', null, 'Reading the diagram'));
+  const tips = hel('div'); tips.style.fontSize='11.5px'; tips.style.color='var(--muted)';
+  tips.textContent = 'Dashed boxes are outside the current container (double-click to jump). Boxes marked ⊞ contain more detail — double-click or click the badge to drill in. Labels marked ⊕ bundle several interactions — click to fan them out.';
+  lg.appendChild(tips);
+}
+
+/* ============================ export ============================ */
+function exportSvg(){
+  const svg = $('svg').cloneNode(true);
+  const pad = 30;
+  const b = curLayout ? curLayout.bounds : {w:800,h:600};
+  const x0 = (b.x0 || 0) - pad, y0 = (b.y0 || 0) - pad;
+  svg.setAttribute('width', b.w + 2*pad); svg.setAttribute('height', b.h + 2*pad);
+  svg.setAttribute('viewBox', `${x0} ${y0} ${b.w+2*pad} ${b.h+2*pad}`);
+  const world = svg.querySelector('#world'); if (world) world.removeAttribute('transform');
+  const cs = getComputedStyle(document.documentElement);
+  let css = SVG_CSS + ' svg{background:VAR_CANVAS}';
+  const resolve = s => s.replace(/var\((--[a-z-]+)\)/g, (m,v) => cs.getPropertyValue(v).trim() || m);
+  const styleEl = svg.querySelector('style'); if (styleEl) styleEl.textContent = resolve(css);
+  svg.insertBefore(el('rect',{x:x0, y:y0, width:b.w+2*pad, height:b.h+2*pad, fill:cs.getPropertyValue('--canvas').trim()}), svg.firstChild.nextSibling);
+  let out = new XMLSerializer().serializeToString(svg);
+  out = resolve(out);
+  const blob = new Blob([out], {type:'image/svg+xml'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const label = state.view==='flows' && state.flow ? state.flow : (state.ctx || 'overview');
+  a.download = (MODEL.title||'diagram').replace(/\W+/g,'-').toLowerCase() + '-' + label + '.svg';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+}
+
+/* ============================ init ============================ */
+function init(){
+  if (!MODEL || !Array.isArray(MODEL.nodes) || !MODEL.nodes.length) throw new Error('No diagram model embedded. Build this file with build_diagram.py.');
+  buildIndex();
+  loadLayout();            // after buildIndex: pruning stale pins needs nodeById
+  document.title = MODEL.title || document.title;
+  buildLegend();
+  setupPanZoom();
+  setupSearch();
+  $('tabStructure').addEventListener('click', ()=>{ state.view='structure'; state.flow=null; setTab(); render(); fit(); });
+  $('tabFlows').addEventListener('click', ()=>{ state.view='flows'; setTab(); render(); });
+  $('tabFlows').textContent = 'Flows' + ((MODEL.flows||[]).length ? ' ('+MODEL.flows.length+')' : '');
+  if (!(MODEL.flows||[]).length) $('tabFlows').style.display='none';
+  $('backFlow').addEventListener('click', ()=>{ state.flow=null; render(); });
+  $('fitBtn').addEventListener('click', fit);
+  $('resetLayoutBtn').addEventListener('click', ev => resetLayout(ev.shiftKey));
+  $('legendBtn').addEventListener('click', ()=>$('legend').classList.toggle('open'));
+  $('exportBtn').addEventListener('click', exportSvg);
+  window.addEventListener('keydown', ev => {
+    if (ev.target.tagName === 'INPUT') return;
+    if (ev.key === 'Escape') {
+      if (state.view==='flows' && state.flow) { state.flow=null; render(); }
+      else if (state.sel) select(null);
+      else if (state.ctx) navigate(nodeById[state.ctx].parent ?? null);
+    }
+    if (ev.key === 'f') fit();
+    if (ev.key === '/') { ev.preventDefault(); $('search').focus(); }
+  });
+  window.addEventListener('hashchange', readHash);
+  window.addEventListener('resize', ()=>{});
+  if (location.hash) readHash(); else { render(); fit(); }
+}
+try { init(); }
+catch (e) {
+  document.querySelector('main').style.display='none';
+  const err = $('err'); err.style.display='block';
+  err.textContent = 'Failed to render diagram: ' + e.message;
+  console.error(e);
+}
+</script>
+</body>
+</html>

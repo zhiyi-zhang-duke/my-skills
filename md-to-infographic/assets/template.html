@@ -1,0 +1,436 @@
+<!--
+  md-to-infographic template
+  ==========================
+  Use this as the starting point for every generated HTML. The CSS is the contract:
+  don't change the palette, don't add a light-mode toggle, don't pull in fonts/CDNs.
+
+  Replace the example content. Keep components you use, delete ones you don't, and
+  preserve the order: hero → TL;DR → numbered sections → footer.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>__TITLE__</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel-2: #1c2129;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-soft: rgba(88,166,255,0.12);
+    --high: #f85149;
+    --med: #d29922;
+    --low: #3fb950;
+    --code-bg: #0a0d12;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    padding: 0 0 80px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 60%, #0e1116 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 24px 48px;
+    text-align: center;
+  }
+  .hero .eyebrow {
+    color: var(--accent);
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: 38px;
+    margin: 0 0 14px;
+    word-break: break-word;
+  }
+  .hero h1.mono {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  .hero p { color: var(--muted); font-size: 17px; max-width: 720px; margin: 0 auto; }
+
+  /* TL;DR — pinned summary card right under the hero */
+  .tldr {
+    margin: -28px auto 0;
+    max-width: 880px;
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 22px 26px;
+    box-shadow: 0 0 0 4px var(--accent-soft);
+    position: relative;
+  }
+  .tldr .tag {
+    position: absolute;
+    top: -11px;
+    left: 22px;
+    background: var(--bg);
+    color: var(--accent);
+    padding: 2px 10px;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+  }
+  .tldr p { margin: 0; font-size: 16px; }
+
+  /* Section */
+  section { margin-top: 56px; }
+  h2 {
+    font-size: 24px;
+    margin: 0 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 .num {
+    display: inline-block;
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    margin-right: 10px;
+  }
+  p { margin: 0 0 14px; }
+  p strong { color: var(--text); }
+
+  /* Stat cards */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .stat {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .stat .num-big {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  .stat .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* Flow diagram */
+  .diagram {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    margin-top: 20px;
+  }
+  .flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+  }
+  .flow.simple { grid-template-columns: 1fr auto 1fr; }
+  .node {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 12px;
+  }
+  .node.danger { border-color: var(--high); box-shadow: 0 0 0 1px rgba(248,81,73,0.25) inset; }
+  .node.good   { border-color: var(--low);  box-shadow: 0 0 0 1px rgba(63,185,80,0.25) inset; }
+  .node .title { font-weight: 600; font-size: 14px; }
+  .node .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .arrow {
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .arrow .multiplier {
+    display: block;
+    color: var(--high);
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .flow-caption {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 18px;
+  }
+  @media (max-width: 720px) {
+    .flow, .flow.simple { grid-template-columns: 1fr; }
+    .arrow { transform: rotate(90deg); padding: 6px 0; }
+  }
+
+  /* Issue cards (severity-coded) */
+  .issues { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+  .issue {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+  }
+  .issue.high { border-left-color: var(--high); }
+  .issue.med  { border-left-color: var(--med); }
+  .issue.low  { border-left-color: var(--low); }
+  .issue-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .issue-num {
+    font-family: ui-monospace, monospace;
+    font-size: 22px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .issue-title { font-size: 17px; font-weight: 600; flex: 1; min-width: 200px; }
+  .badge {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .badge.high { background: rgba(248,81,73,0.15); color: var(--high); border: 1px solid rgba(248,81,73,0.4); }
+  .badge.med  { background: rgba(210,153,34,0.15); color: var(--med);  border: 1px solid rgba(210,153,34,0.4); }
+  .badge.low  { background: rgba(63,185,80,0.15);  color: var(--low);  border: 1px solid rgba(63,185,80,0.4); }
+  .issue p { color: var(--muted); }
+
+  /* Code refs */
+  code, .code-ref {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+  }
+  code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--text);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .code-ref {
+    display: inline-block;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 8px;
+    color: var(--accent);
+    text-decoration: none;
+    margin: 2px 2px;
+  }
+  .code-ref:hover { border-color: var(--accent); }
+
+  /* Two-column grids (pros/cons, ok/questions, etc) */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .card h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: var(--accent);
+  }
+  .card.ok h3   { color: var(--low); }
+  .card.q  h3   { color: var(--med); }
+  .card.warn h3 { color: var(--high); }
+  .card ul { margin: 8px 0 0; padding-left: 18px; }
+  .card li { color: var(--muted); margin-bottom: 6px; }
+  .card li strong { color: var(--text); }
+
+  /* Keypath: numbered ordered list of code-ref steps */
+  .keypath {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 16px;
+    overflow-x: auto;
+  }
+  .keypath ol {
+    margin: 0;
+    padding-left: 24px;
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+  }
+  .keypath ol li { margin-bottom: 6px; }
+  .keypath .arrow-down { color: var(--accent); font-weight: 700; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <div class="eyebrow">__EYEBROW__</div>
+  <h1>__TITLE__</h1>
+  <p>__SUBTITLE__</p>
+</div>
+
+<div class="wrap">
+
+  <!-- ===== TL;DR (always include, right under hero) ===== -->
+  <div class="tldr">
+    <span class="tag">TL;DR</span>
+    <p>__BOTTOM_LINE_SUMMARY__</p>
+  </div>
+
+  <!-- ===== Stat grid example ===== -->
+  <section>
+    <h2><span class="num">01</span>__SECTION_TITLE__</h2>
+    <p>Optional intro paragraph.</p>
+    <div class="stats">
+      <div class="stat"><div class="num-big">N</div><div class="label">Label</div></div>
+      <div class="stat"><div class="num-big">42</div><div class="label">Other label</div></div>
+      <div class="stat"><div class="num-big">0</div><div class="label">Zero is fine</div></div>
+      <div class="stat"><div class="num-big">~5s</div><div class="label">Strings work too</div></div>
+    </div>
+  </section>
+
+  <!-- ===== Flow diagram example ===== -->
+  <section>
+    <h2><span class="num">02</span>__SECTION_TITLE__</h2>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node"><div class="title">Source</div><div class="sub">subtitle</div></div>
+        <div class="arrow">→<span class="multiplier">× factor</span></div>
+        <div class="node danger"><div class="title">Hot spot</div><div class="sub">subtitle</div></div>
+        <div class="arrow">→<span class="multiplier">× factor</span></div>
+        <div class="node danger"><div class="title">Sink</div><div class="sub">subtitle</div></div>
+      </div>
+      <div class="flow-caption">Optional caption explaining the multiplication.</div>
+    </div>
+  </section>
+
+  <!-- ===== Keypath example ===== -->
+  <section>
+    <h2><span class="num">03</span>__SECTION_TITLE__</h2>
+    <div class="keypath">
+      <ol>
+        <li><span class="arrow-down">→</span> <a class="code-ref" href="./path/to/file.go#L83">file.go:83</a> &nbsp; description of this step</li>
+        <li><span class="arrow-down">→</span> <a class="code-ref" href="./path/to/other.go#L17">other.go:17</a> &nbsp; description</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ===== Severity issue cards example ===== -->
+  <section>
+    <h2><span class="num">04</span>__SECTION_TITLE__</h2>
+    <div class="issues">
+
+      <div class="issue high">
+        <div class="issue-head">
+          <span class="issue-num">#1</span>
+          <span class="issue-title">Title of the issue</span>
+          <span class="badge high">High</span>
+        </div>
+        <p>Body paragraph explaining the issue.</p>
+        <p><a class="code-ref" href="./path#L100">file.go:100</a></p>
+      </div>
+
+      <div class="issue med">
+        <div class="issue-head">
+          <span class="issue-num">#2</span>
+          <span class="issue-title">Medium-severity title</span>
+          <span class="badge med">Medium</span>
+        </div>
+        <p>Body.</p>
+      </div>
+
+      <div class="issue low">
+        <div class="issue-head">
+          <span class="issue-num">#3</span>
+          <span class="issue-title">Low / nitpick</span>
+          <span class="badge low">Low</span>
+        </div>
+        <p>Body.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== Two-column grid example (pros/cons, ok/questions, etc) ===== -->
+  <section>
+    <h2><span class="num">05</span>__SECTION_TITLE__</h2>
+    <div class="grid-2">
+      <div class="card ok">
+        <h3>What's working</h3>
+        <ul>
+          <li><strong>Bold lead</strong> — explanation</li>
+          <li>Plain item</li>
+        </ul>
+      </div>
+      <div class="card q">
+        <h3>Open questions</h3>
+        <ul>
+          <li><strong>Bold lead</strong> — explanation</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Plain card section (use for prose that doesn't fit a pattern) ===== -->
+  <section>
+    <h2><span class="num">06</span>__SECTION_TITLE__</h2>
+    <div class="card">
+      <p style="margin:0;color:var(--text);font-size:16px">
+        A single emphasized paragraph — good for a closing thought, a one-liner, or a callout.
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  Generated from __SOURCE_PATH__ · __DATE__
+</footer>
+
+</body>
+</html>
+
